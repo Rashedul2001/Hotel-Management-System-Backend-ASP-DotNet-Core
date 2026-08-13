@@ -1,0 +1,83 @@
+HotelManagement.API/
+├── Properties/
+│   └── launchSettings.json                   # Local IIS/Kestrel launch profiles and ports
+│
+├── Controllers/                              # HTTP REST API Endpoints
+│   ├── AuthController.cs                     # Login, Register, Refresh Token endpoints
+│   ├── RoomsController.cs                    # Room search, pricing, availability management
+│   ├── BookingsController.cs                 # Room reservation, cancellation, guest bookings
+│   ├── HousekeepingController.cs             # Cleaning schedules and task management
+│   └── ChatController.cs                     # API bridge for Next.js AI Chatbot
+│
+├── Hubs/                                     # Real-Time WebSocket Communication (SignalR)
+│   ├── RoomStatusHub.cs                      # Pushes live room updates (Occupied/Clean/Dirty) to Next.js UI
+│   └── ChatHub.cs                            # (Optional) Real-time streaming chat messages
+│
+├── Data/                                     # Database Layer (EF Core)
+│   ├── ApplicationDbContext.cs               # EF Core DbContext instance
+│   ├── DbInitializer.cs                      # Seeds default roles, admin user, and sample room data
+│   ├── Configurations/                       # EF Core Entity Configurations (Fluent API)
+│   │   ├── RoomConfiguration.cs
+│   │   └── BookingConfiguration.cs
+│   └── Migrations/                           # Auto-generated EF Core database migration files
+│
+├── Entities/                                 # Database Table Models (Domain Entities)
+│   ├── ApplicationUser.cs                    # Custom Identity User class (inherits IdentityUser)
+│   ├── Room.cs                               # Room details, rate, capacity, status
+│   ├── Booking.cs                            # Reservation dates, total price, guest links
+│   ├── Guest.cs                              # Profile info, passport/ID details
+│   ├── HousekeepingTask.cs                   # Cleaning assignments and status
+│   └── Enums/                                # Enums used across database tables
+│       ├── RoomStatus.cs                     # Available, Occupied, Maintenance, Cleaning
+│       └── BookingStatus.cs                  # Pending, Confirmed, CheckedIn, Cancelled
+│
+├── DTOs/                                     # Data Transfer Objects (Request/Response Contracts)
+│   ├── Auth/
+│   │   ├── LoginRequestDto.cs
+│   │   ├── RegisterRequestDto.cs
+│   │   └── AuthResponseDto.cs                # Returns JWT Token and user info
+│   ├── Rooms/
+│   │   ├── RoomDto.cs
+│   │   └── CreateRoomDto.cs
+│   ├── Bookings/
+│   │   ├── BookingDto.cs
+│   │   └── CreateBookingDto.cs
+│   └── AI/
+│       ├── ChatRequestDto.cs
+│       └── ChatResponseDto.cs
+│
+├── Services/                                 # Business Logic Implementation
+│   ├── Interfaces/                           # Dependency Injection Service Interfaces
+│   │   ├── IAuthService.cs
+│   │   ├── IRoomService.cs
+│   │   ├── IBookingService.cs
+│   │   └── IAIChatService.cs
+│   └── Implementations/                      # Actual Core Business Logic
+│       ├── AuthService.cs                    # JWT generation, user registration & verification
+│       ├── RoomService.cs                   # Business logic for room availability checks
+│       ├── BookingService.cs                # Reservation workflows & invoice processing
+│       └── AIChatService.cs                 # Orchestrates LLM requests and Tool Execution
+│
+├── AI/                                       # AI Agent & Tool Calling Infrastructure
+│   ├── Plugins/                              # Functions the AI Chatbot can trigger
+│   │   ├── BookingPlugin.cs                  # Functions: GetAvailableRooms, CreateBooking, CancelBooking
+│   │   ├── RoomServicePlugin.cs              # Functions: OrderRoomService, RequestTowels
+│   │   └── HotelInfoPlugin.cs                # Functions: GetCheckInRules, GetHotelAmenities
+│   └── Prompts/                              # System Prompt definitions and Agent instructions
+│       └── SystemPrompts.cs                  # Guardrails, persona, and system instruction strings
+│
+├── Middleware/                               # ASP.NET Core Request/Response Pipeline Rules
+│   ├── ExceptionHandlingMiddleware.cs        # Catches unhandled errors and returns standard JSON error responses
+│   └── JwtContextMiddleware.cs              # Attaches user context/claims to AI tool executions
+│
+├── Common/                                   # Shared Helpers & Constants
+│   ├── Constants/
+│   │   └── Roles.cs                          # Defines "Admin", "Receptionist", "Housekeeper", "Guest"
+│   └── Helpers/
+│       └── DateTimeUtils.cs                  # Date formatting and timezone helpers
+│
+├── appsettings.json                         # Primary application configuration file
+├── appsettings.Development.json              # Local development overrides
+├── appsettings.Production.json               # Production environment overrides
+├── HotelManagement.API.csproj                # C# Project dependencies & package reference definitions
+└── Program.cs                                # App Bootstrap: DI Registrations, Middleware Pipeline setup
