@@ -1,0 +1,37 @@
+# ==========================================
+# 1. ASP.NET Core & .NET Backend
+# ==========================================
+
+# Build & Output Directories
+**/bin/
+**/obj/
+**/out/
+[Bb]in/
+[Oo]bj/
+
+# IDE & Editor Settings
+.vs/
+.idea/
+*.user
+*.userossc
+*.suo
+*.userprefs
+*.sln.docstates
+
+# Configuration & Secrets
+appsettings.Development.json
+appsettings.Local.json
+**/appsettings.Secrets.json
+**/secrets.json
+
+# EF Core & Database Files
+*.db
+*.db-shm
+*.db-wal
+*.mdf
+*.ldf
+
+# Logs & Test Results
+*.log
+**/TestResults/
+**/logs/
