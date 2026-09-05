@@ -19,9 +19,10 @@
 *.sln.docstates
 
 # Configuration & Secrets
-appsettings.Development.json
-appsettings.Local.json
-**/appsettings.Secrets.json
+/appsettings.Development.json
+/appsettings.Local.json
+/appsettings.Production.json
+/appsettings.Secrets.json
 **/secrets.json
 
 # EF Core & Database Files
@@ -35,3 +36,7 @@ appsettings.Local.json
 *.log
 **/TestResults/
 **/logs/
+
+#Rashedul
+Todo.md 
+
