@@ -20,12 +20,13 @@ builder.Services
     .AddIdentityApiEndpoints<ApplicationUser>()
     .AddEntityFrameworkStores<ApplicationDbContext>();
 
+var frontendBaseUrl = builder.Configuration["Frontend:BaseUrl"]?? "http://localhost:3000"; // Default to localhost if not set in configuration
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("NextJsFrontend", policy =>
     {
         policy
-            .WithOrigins("http://localhost:3000")
+            .WithOrigins(frontendBaseUrl)
             .AllowAnyHeader()
             .AllowAnyMethod()
             .AllowCredentials();
