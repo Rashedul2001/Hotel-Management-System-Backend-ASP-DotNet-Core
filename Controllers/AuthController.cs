@@ -15,11 +15,18 @@ namespace Hotel_Management_System_Backend_dotNet.Controllers
         [HttpPost("register")]
         public async Task<IActionResult> Register(RegisterRequestDto request)
         {
-            if (request is null || string.IsNullOrWhiteSpace(request.FullName) || string.IsNullOrWhiteSpace(request.Email) || string.IsNullOrWhiteSpace(request.Password))
+            if (request is null || string.IsNullOrWhiteSpace(request.FullName) || string.IsNullOrWhiteSpace(request.Email) || string.IsNullOrWhiteSpace(request.Password) || string.IsNullOrWhiteSpace(request.ConfirmPassword) )
             {
                 return BadRequest(new
                 {
                     message = "Full Name, Email, and Password are required."
+                });
+            }
+            if (string.Equals(request.Password, request.ConfirmPassword) is false)
+            {
+                return BadRequest(new
+                {
+                    message = "Password and Confirm Password do not match."
                 });
             }
             var existingUser = await _userManager.FindByEmailAsync(request.Email);

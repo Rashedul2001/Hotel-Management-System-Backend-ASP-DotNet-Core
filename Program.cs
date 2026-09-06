@@ -20,6 +20,19 @@ builder.Services
     .AddIdentityApiEndpoints<ApplicationUser>()
     .AddEntityFrameworkStores<ApplicationDbContext>();
 
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("NextJsFrontend", policy =>
+    {
+        policy
+            .WithOrigins("http://localhost:3000")
+            .AllowAnyHeader()
+            .AllowAnyMethod()
+            .AllowCredentials();
+    });
+});
+
+
 builder.Services.AddAuthentication();
 builder.Services.AddAuthorization();
 
@@ -34,19 +47,23 @@ builder.Services.Configure<ApiBehaviorOptions>(options =>
 {
     options.InvalidModelStateResponseFactory = context =>
     {
-        /*
-         * I have removed the detailed error information from the response to avoid exposing sensitive information.
-         * You can customize this further based on your needs.
-         */
+        //detail information are only for development environment
+        var env = builder.Environment;
+        IEnumerable<object> errors = [];
+        if (env.IsDevelopment())
+        {
+            
+            errors = context.ModelState
+                .Where(e => e.Value != null && e.Value.Errors.Count > 0)
+                .Select(e => new { Field = e.Key, Error = e.Value?.Errors.First()?.ErrorMessage ?? "Unknown error" });
 
-        //var errors = context.ModelState
-        //    .Where(e => e.Value != null && e.Value.Errors.Count > 0)
-        //    .Select(e => new { Field = e.Key, Error = e.Value?.Errors.First()?.ErrorMessage ?? "Unknown error" });
+        }
+
 
         return new BadRequestObjectResult(new
         {
             message = "Validation failed. Please check your input.",
-            //errors
+            errors
         });
     };
 });
@@ -57,12 +74,14 @@ var app = builder.Build();
 
 if (app.Environment.IsDevelopment())
 {
+
     app.MapOpenApi();
 }
 
 app.UseHttpsRedirection();
 
-//use authentication must come before authorization otherwise it will not work
+/*below 3 lines should be in this order to work properly */
+app.UseCors("NextJsFrontend");
 app.UseAuthentication();
 app.UseAuthorization();
 
