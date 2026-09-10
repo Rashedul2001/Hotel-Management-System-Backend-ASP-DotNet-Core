@@ -20,7 +20,8 @@ builder.Services
     .AddIdentityApiEndpoints<ApplicationUser>()
     .AddEntityFrameworkStores<ApplicationDbContext>();
 
-var frontendBaseUrl = builder.Configuration["Frontend:BaseUrl"]?? "http://localhost:3000"; // Default to localhost if not set in configuration
+var frontendBaseUrl = builder.Configuration["Frontend:BaseUrl"] ??
+ throw new InvalidOperationException("Frontend base URL is not configured in appsettings.json or environment variables.");
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("NextJsFrontend", policy =>
@@ -34,16 +35,12 @@ builder.Services.AddCors(options =>
 });
 
 
-builder.Services.AddAuthentication();
 builder.Services.AddAuthorization();
-
-builder.Services.AddControllers();
 
 /* Configure custom error response globally 
  *without this the ASP .NET Core will return a default error response for validation errors, 
  *which may not be user-friendly or consistent with your API's error handling strategy 
  */
-
 builder.Services.Configure<ApiBehaviorOptions>(options =>
 {
     options.InvalidModelStateResponseFactory = context =>
@@ -53,7 +50,7 @@ builder.Services.Configure<ApiBehaviorOptions>(options =>
         IEnumerable<object> errors = [];
         if (env.IsDevelopment())
         {
-            
+
             errors = context.ModelState
                 .Where(e => e.Value != null && e.Value.Errors.Count > 0)
                 .Select(e => new { Field = e.Key, Error = e.Value?.Errors.First()?.ErrorMessage ?? "Unknown error" });
@@ -79,9 +76,9 @@ if (app.Environment.IsDevelopment())
     app.MapOpenApi();
 }
 
-app.UseHttpsRedirection();
 
-/*below 3 lines should be in this order to work properly */
+/*below 4 lines should be in this order to work properly */
+app.UseHttpsRedirection();
 app.UseCors("NextJsFrontend");
 app.UseAuthentication();
 app.UseAuthorization();
