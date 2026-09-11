@@ -23,6 +23,13 @@
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
     <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="10.0.3" />
+
+
+    <!-- Prevent dotnet watch from tracking compiled outputs -->
+    <!-- in Ubuntu the default 128 inotify is not enough so removed the bin obj and also added many
+    more inotify limit to the linux system -->
+    <Watch Remove="bin\**\*;obj\**\*" />
+
   </ItemGroup>
 
 </Project>
