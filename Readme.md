@@ -14,6 +14,7 @@
 
 
 ***Contributing Scenario***
+
 1.fork the repo 
 
 2.clone
@@ -22,6 +23,6 @@
 
 4.create another branch
 
-5.merge and push 
+5.push to orgin 
 
-6.set a pull request
+6.create a pull request
