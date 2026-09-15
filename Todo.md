@@ -1,0 +1,2 @@
+1.the login and registration modal is not responsive and they won't let user scrool down or up in small screens 
+2. set remeber me option correctly, make user logged in 1 day without rmember me otherwise 30 days
