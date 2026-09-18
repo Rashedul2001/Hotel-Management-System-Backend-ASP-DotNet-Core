@@ -1,6 +1,7 @@
 ﻿using System.Security.Claims;
 using Hotel_Management_System_Backend_dotNet.DTOs.Auth;
 using Hotel_Management_System_Backend_dotNet.Entities;
+using Hotel_Management_System_Backend_dotNet.Entities.Authorization;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
@@ -19,6 +20,7 @@ namespace Hotel_Management_System_Backend_dotNet.Controllers
         // ---------------------------------------------------------
         // REGISTER
         // it will try to register the user and if successful, it will automatically log the user in.
+        // also it will assign the user to the "Guest" role by default.
         // ---------------------------------------------------------
 
         [HttpPost("register")]
@@ -80,6 +82,21 @@ namespace Hotel_Management_System_Backend_dotNet.Controllers
                         description = error.Description
                     })
                 });
+            }
+
+            var roleResult = await _userManager.AddToRoleAsync(user, Roles.Guest);
+            if (!roleResult.Succeeded)
+            {
+                return BadRequest(new
+                {
+                    message = "Failed to assign role to the user.",
+                    errors = roleResult.Errors.Select(error => new
+                    {
+                        code = error.Code,
+                        description = error.Description
+                    })
+                });
+
             }
 
             // Automatically log the newly registered user in.
@@ -213,10 +230,9 @@ namespace Hotel_Management_System_Backend_dotNet.Controllers
                 return Unauthorized();
             }
 
-            // TODO: Roles shall be implemented in the future. For now, we will not return roles in the response.
 
-            // var roles =
-            //     await _userManager.GetRolesAsync(user);
+            var roles =
+                await _userManager.GetRolesAsync(user);
 
             return Ok(new
             {
@@ -224,7 +240,7 @@ namespace Hotel_Management_System_Backend_dotNet.Controllers
                 fullName = user.FullName,
                 userName = user.UserName,
                 email = user.Email,
-                // roles
+                roles
             });
         }
 
@@ -232,7 +248,7 @@ namespace Hotel_Management_System_Backend_dotNet.Controllers
         // ---------------------------------------------------------
         // LOGOUT
         // ---------------------------------------------------------
-
+        
         [HttpPost("logout")]
         public async Task<IActionResult> Logout()
         {

@@ -1,6 +1,7 @@
 using Hotel_Management_System_Backend_dotNet.Data;
 using Hotel_Management_System_Backend_dotNet.Data.Seeds;
 using Hotel_Management_System_Backend_dotNet.Entities;
+using Hotel_Management_System_Backend_dotNet.Entities.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -17,7 +18,7 @@ builder.Services
     .AddIdentityApiEndpoints<ApplicationUser>()
     .AddRoles<IdentityRole>()
     .AddEntityFrameworkStores<ApplicationDbContext>();
-    
+
 
 var frontendBaseUrl = builder.Configuration["Frontend:BaseUrl"] ??
  throw new InvalidOperationException("Frontend base URL is not configured in appsettings.json or environment variables.");
@@ -33,8 +34,22 @@ builder.Services.AddCors(options =>
     });
 });
 
+builder.Services.AddAuthentication();
 
-builder.Services.AddAuthorization();
+builder.Services.AddAuthorizationBuilder()
+    .AddPolicy("AdminOnly", policy =>
+        policy.RequireRole(
+            Roles.SuperAdmin,
+            Roles.Admin
+        ))
+    .AddPolicy("StaffAccess", policy =>
+        policy.RequireRole(
+            Roles.SuperAdmin,
+            Roles.Admin,
+            Roles.Staff
+        )
+    );
+
 
 builder.Services.Configure<ApiBehaviorOptions>(options =>
 {
