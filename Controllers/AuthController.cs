@@ -64,7 +64,6 @@ namespace Hotel_Management_System_Backend_dotNet.Controllers
             var user = new ApplicationUser
             {
                 FullName = request.FullName,
-                UserName = request.Email,
                 Email = request.Email,
                 CreatedAt = DateTime.UtcNow
             };
@@ -122,7 +121,6 @@ namespace Hotel_Management_System_Backend_dotNet.Controllers
                 {
                     id = user.Id,
                     fullName = user.FullName,
-                    userName = user.UserName,
                     email = user.Email
                 }
             });
@@ -138,34 +136,28 @@ namespace Hotel_Management_System_Backend_dotNet.Controllers
         {
             if (
                 request is null ||
-                string.IsNullOrWhiteSpace(request.EmailOrUserName) ||
+                string.IsNullOrWhiteSpace(request.Email) ||
                 string.IsNullOrWhiteSpace(request.Password)
             )
             {
                 return BadRequest(new
                 {
-                    message = "Username/email and password are required."
+                    message = "Email and password are required."
                 });
             }
 
             ApplicationUser? user = null;
 
-            if (request.EmailOrUserName.Contains('@'))
-            {
-                user = await _userManager.FindByEmailAsync(
-                    request.EmailOrUserName
-                );
-            }
-
-            user ??= await _userManager.FindByNameAsync(
-                request.EmailOrUserName
+            user = await _userManager.FindByEmailAsync(
+                request.Email
             );
+
 
             if (user is null)
             {
                 return Unauthorized(new
                 {
-                    message = "Invalid username/email "
+                    message = "Invalid email "
                 });
             }
 
@@ -203,7 +195,7 @@ namespace Hotel_Management_System_Backend_dotNet.Controllers
 
             return Unauthorized(new
             {
-                message = "Invalid username/email or password."
+                message = "Invalid email or password."
             });
         }
 
@@ -238,8 +230,8 @@ namespace Hotel_Management_System_Backend_dotNet.Controllers
             {
                 id = user.Id,
                 fullName = user.FullName,
-                userName = user.UserName,
                 email = user.Email,
+                profilePictureUrl = user.ProfilePictureUrl,
                 roles
             });
         }
@@ -248,7 +240,7 @@ namespace Hotel_Management_System_Backend_dotNet.Controllers
         // ---------------------------------------------------------
         // LOGOUT
         // ---------------------------------------------------------
-        
+
         [HttpPost("logout")]
         public async Task<IActionResult> Logout()
         {

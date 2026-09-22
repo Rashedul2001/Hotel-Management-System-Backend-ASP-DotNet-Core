@@ -18,7 +18,7 @@ var connectionString = builder.Configuration.GetConnectionString("PostgreSql");
 builder.Services.AddDbContext<ApplicationDbContext>(options => options.UseNpgsql(connectionString));
 
 builder.Services.Configure<CloudinarySettings>(
-    builder.Configuration.GetSection("Cloudinary"));
+    builder.Configuration.GetSection("CloudinarySettings"));
 
 builder.Services.AddScoped<ICloudinaryService, CloudinaryService>();
 
