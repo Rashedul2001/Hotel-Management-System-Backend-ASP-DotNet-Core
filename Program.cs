@@ -195,7 +195,7 @@ builder
                 // The OAuth handler has already exchanged the code for
                 // an access token.
                 //
-                // Now request LinkedIn's OIDC userinfo endpoint.
+                // Now request LinkedIn's OIDC userInfo endpoint.
                 // -----------------------------------------------------
 
                 using var request = new HttpRequestMessage(
@@ -437,9 +437,20 @@ builder.Services.ConfigureApplicationCookie(options =>
 
     options.Cookie.SameSite = SameSiteMode.Lax;
 
-    options.ExpireTimeSpan = TimeSpan.FromDays(14);
+    options.ExpireTimeSpan = TimeSpan.FromDays(1);
 
-    options.SlidingExpiration = true;
+    options.SlidingExpiration = false;
+
+    options.Events.OnSigningIn = context =>
+    {
+        context.Properties.ExpiresUtc = DateTimeOffset.UtcNow.Add(
+            context.Properties.IsPersistent
+                ? TimeSpan.FromDays(30)
+                : TimeSpan.FromDays(1)
+        );
+
+        return Task.CompletedTask;
+    };
 
     // When authentication fails for an API request,
     // don't redirect the browser to an HTML login page.

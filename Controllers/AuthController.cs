@@ -216,7 +216,8 @@ namespace Hotel_Management_System_Backend_dotNet.Controllers
         [AllowAnonymous]
         [HttpGet("external/{provider}")]
         public IActionResult ExternalLogin(
-            string provider
+            string provider,
+            [FromQuery] bool rememberMe = false
         )
         {
             var scheme =
@@ -232,7 +233,9 @@ namespace Hotel_Management_System_Backend_dotNet.Controllers
             }
 
             var redirectUri =
-                "/api/auth/external-callback";
+                rememberMe
+                    ? "/api/auth/external-callback?rememberMe=true"
+                    : "/api/auth/external-callback";
 
             var properties =
                 _signInManager.ConfigureExternalAuthenticationProperties(
@@ -256,7 +259,9 @@ namespace Hotel_Management_System_Backend_dotNet.Controllers
 
         [AllowAnonymous]
         [HttpGet("external-callback")]
-        public async Task<IActionResult> ExternalCallback()
+        public async Task<IActionResult> ExternalCallback(
+            [FromQuery] bool rememberMe = false
+        )
         {
             var info =
                 await _signInManager.GetExternalLoginInfoAsync();
@@ -315,7 +320,7 @@ namespace Hotel_Management_System_Backend_dotNet.Controllers
             {
                 await _signInManager.SignInAsync(
                     user,
-                    isPersistent: true
+                    isPersistent: rememberMe
                 );
 
                 return RedirectToFrontend();
@@ -412,7 +417,7 @@ namespace Hotel_Management_System_Backend_dotNet.Controllers
 
                 await _signInManager.SignInAsync(
                     user,
-                    isPersistent: true
+                    isPersistent: rememberMe
                 );
 
                 return RedirectToFrontend();
@@ -505,7 +510,7 @@ namespace Hotel_Management_System_Backend_dotNet.Controllers
 
             await _signInManager.SignInAsync(
                 user,
-                isPersistent: true
+                isPersistent: rememberMe
             );
 
             return RedirectToFrontend();
@@ -566,7 +571,7 @@ namespace Hotel_Management_System_Backend_dotNet.Controllers
         // ---------------------------------------------------------
         // LOGOUT
         // ---------------------------------------------------------
-
+        [Authorize]
         [HttpPost("logout")]
         public async Task<IActionResult> Logout()
         {
@@ -583,7 +588,7 @@ namespace Hotel_Management_System_Backend_dotNet.Controllers
         // HELPERS
         // =========================================================
 
-        private string? NormalizeProviderScheme(
+        private static string? NormalizeProviderScheme(
             string provider
         )
         {
@@ -606,7 +611,7 @@ namespace Hotel_Management_System_Backend_dotNet.Controllers
         }
 
 
-        private string? GetProfilePicture(
+        private static string? GetProfilePicture(
             ClaimsPrincipal principal
         )
         {
