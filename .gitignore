@@ -23,6 +23,7 @@
 /appsettings.Local.json
 /appsettings.Production.json
 /appsettings.Secrets.json
+/appsettings.json
 **/secrets.json
 
 # EF Core & Database Files
@@ -38,5 +39,5 @@
 **/logs/
 
 #Rashedul
-Todo.md 
+.vscode/
 
