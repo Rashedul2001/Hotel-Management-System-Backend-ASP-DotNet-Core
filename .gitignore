@@ -12,6 +12,7 @@
 # IDE & Editor Settings
 .vs/
 .idea/
+.vscode/
 *.user
 *.userossc
 *.suo

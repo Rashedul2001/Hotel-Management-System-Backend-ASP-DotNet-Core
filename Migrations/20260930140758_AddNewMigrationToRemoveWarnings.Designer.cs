@@ -12,15 +12,15 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Hotel_Management_System_Backend_dotNet.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20260904115458_Set the Name property as FullName")]
-    partial class SettheNamepropertyasFullName
+    [Migration("20260930140758_AddNewMigrationToRemoveWarnings")]
+    partial class AddNewMigrationToRemoveWarnings
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "10.0.11")
+                .HasAnnotation("ProductVersion", "10.0.12")
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
@@ -49,7 +49,8 @@ namespace Hotel_Management_System_Backend_dotNet.Migrations
 
                     b.Property<string>("FullName")
                         .IsRequired()
-                        .HasColumnType("text");
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
 
                     b.Property<bool>("LockoutEnabled")
                         .HasColumnType("boolean");
@@ -74,8 +75,13 @@ namespace Hotel_Management_System_Backend_dotNet.Migrations
                     b.Property<bool>("PhoneNumberConfirmed")
                         .HasColumnType("boolean");
 
+                    b.Property<string>("ProfilePicturePublicId")
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)");
+
                     b.Property<string>("ProfilePictureUrl")
-                        .HasColumnType("text");
+                        .HasMaxLength(2048)
+                        .HasColumnType("character varying(2048)");
 
                     b.Property<string>("SecurityStamp")
                         .HasColumnType("text");
