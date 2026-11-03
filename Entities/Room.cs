@@ -5,7 +5,7 @@
         public Guid Id { get; set; }
         public int RoomNumber { get; set; }
         public string Name { get; set; }
-        public string Type { get; set; }
+        public string Category { get; set; }
         public int Floor { get; set; }
         public string Status { get; set; }
         public bool IsAvailable { get; set; }
