@@ -1,4 +1,5 @@
 ﻿using Bogus;
+using Hotel_Management_System_Backend_dotNet.Common.Constants;
 using Hotel_Management_System_Backend_dotNet.Entities;
 using Microsoft.EntityFrameworkCore;
 
@@ -20,9 +21,10 @@ namespace Hotel_Management_System_Backend_dotNet.Data.MockData
 			int roomsToGenerate = 50 - currentRoomCount;
 
 			var roomIdCounter = 101 + currentRoomCount;
-			var roomCategory = new[] { "Standard", "Deluxe", "Suite", "Penthouse" };
+			var roomCategory = RoomCategories.AllCategories; 
 			var bedTypes = new[] { "Single", "Double", "Queen", "King" };
-			var statuses = new[] { "Clean", "Needs Cleaning", "Maintenance" };
+			var statuses = Statuses.AllStatuses;
+			Console.WriteLine($"Generating {roomsToGenerate} mock rooms...");
 
 			var roomFaker = new Faker<Room>()
 				.RuleFor(r => r.Id, f => Guid.NewGuid())
@@ -31,7 +33,7 @@ namespace Hotel_Management_System_Backend_dotNet.Data.MockData
 				.RuleFor(r => r.Category, f => f.PickRandom(roomCategory))
 				.RuleFor(r => r.Floor, f => f.Random.Int(1, 15))
 				.RuleFor(r => r.Status, f => f.PickRandom(statuses))
-				.RuleFor(r => r.IsAvailable, f => f.Random.Bool(0.8f))
+				.RuleFor(r => r.IsAvailable, f => f.Random.Bool())
 				.RuleFor(r => r.Price, f => Math.Round(f.Random.Decimal(50, 500), 2))
 				.RuleFor(r => r.Capacity, f => f.Random.Int(1, 6))
 				.RuleFor(r => r.BedCount, f => f.Random.Int(1, 3))

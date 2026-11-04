@@ -28,5 +28,6 @@ namespace Hotel_Management_System_Backend_dotNet.DTOs.Room
 		// Sorting
 		public string? SortBy { get; set; } 
 		public bool IsAscending { get; set; } = true;
+		public string? Status{ get; set; }
 	}
 }
