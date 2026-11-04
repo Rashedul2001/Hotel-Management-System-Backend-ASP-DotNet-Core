@@ -91,14 +91,13 @@ namespace Hotel_Management_System_Backend_dotNet.Controllers
 			if (!string.IsNullOrWhiteSpace(parameters.SearchTerm))
 			{
 				var searchTerm = parameters.SearchTerm.Trim().ToLower();
+				var hasRoomNumber = int.TryParse(searchTerm, out var roomNumber);
+
 				query = query.Where(room =>
 					room.Name.ToLower().Contains(searchTerm) ||
-					room.Description.ToLower().Contains(searchTerm));
-				if (isAdmin)
-				{
-					query = query.Where(room =>
-						room.RoomNumber.ToString().Contains(searchTerm));
-				}
+					room.Description.ToLower().Contains(searchTerm) ||
+					(isAdmin && hasRoomNumber && room.RoomNumber == roomNumber));
+			//TODO: Don't know why here isAdmin is false although i'm using the superAdmin Account but it works fine in postman
 			}
 
 
@@ -136,14 +135,6 @@ namespace Hotel_Management_System_Backend_dotNet.Controllers
 					));
 			}
 
-			if (!string.IsNullOrWhiteSpace(parameters.SearchTerm))
-			{
-				var searchTerm = parameters.SearchTerm.Trim().ToLower();
-				query = query.Where(room =>
-					room.Name.ToLower().Contains(searchTerm) ||
-					room.Description.ToLower().Contains(searchTerm));
-			}
-
 			if (parameters.MinPrice.HasValue)
 			{
 				query = query.Where(room =>
@@ -160,13 +151,6 @@ namespace Hotel_Management_System_Backend_dotNet.Controllers
 			{
 				query = query.Where(room =>
 					room.Capacity >= parameters.MinCapacity.Value);
-			}
-
-			if (!string.IsNullOrWhiteSpace(parameters.Category) &&
-				parameters.Category != "All")
-			{
-				query = query.Where(room =>
-					room.Category == parameters.Category);
 			}
 
 			var amenityIds = ParseAmenityIds(parameters.AmenityIds);
