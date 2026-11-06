@@ -13,6 +13,8 @@ namespace Hotel_Management_System_Backend_dotNet.Data.MockData
 			var availableAmenities = await SeedAndGetAmenitiesAsync(context);
 
 			var currentRoomCount = await context.Rooms.CountAsync();
+			var roomIdCounter = await context.Rooms.MaxAsync(r => (int?)r.RoomNumber) ?? 0;
+			roomIdCounter++;
 			if (currentRoomCount >= 50)
 			{
 				return;
@@ -20,7 +22,6 @@ namespace Hotel_Management_System_Backend_dotNet.Data.MockData
 
 			int roomsToGenerate = 50 - currentRoomCount;
 
-			var roomIdCounter = 101 + currentRoomCount;
 			var roomCategory = RoomCategories.AllCategories; 
 			var bedTypes = new[] { "Single", "Double", "Queen", "King" };
 			var statuses = Statuses.AllStatuses;
@@ -34,7 +35,7 @@ namespace Hotel_Management_System_Backend_dotNet.Data.MockData
 				.RuleFor(r => r.Floor, f => f.Random.Int(1, 15))
 				.RuleFor(r => r.Status, f => f.PickRandom(statuses))
 				.RuleFor(r => r.IsAvailable, f => f.Random.Bool())
-				.RuleFor(r => r.Price, f => Math.Round(f.Random.Decimal(50, 500), 2))
+				.RuleFor(r => r.Price, f => Math.Round(f.Random.Decimal(50, 1000), 2))
 				.RuleFor(r => r.Capacity, f => f.Random.Int(1, 6))
 				.RuleFor(r => r.BedCount, f => f.Random.Int(1, 3))
 				.RuleFor(r => r.BedType, f => f.PickRandom(bedTypes))

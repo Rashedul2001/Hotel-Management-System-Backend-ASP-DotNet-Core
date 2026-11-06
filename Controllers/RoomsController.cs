@@ -345,6 +345,7 @@ namespace Hotel_Management_System_Backend_dotNet.Controllers
 
 		[HttpPost]
 		[Authorize(Policy = "AdminOnly")]
+		[Consumes("multipart/form-data")]
 		public async Task<ActionResult<RoomResponseDto>> CreateRoom(
 			[FromForm] CreateOrupdateRoomDto dto,
 			CancellationToken cancellationToken)
@@ -502,18 +503,23 @@ namespace Hotel_Management_System_Backend_dotNet.Controllers
 
 		[HttpPut("{id:guid}")]
 		[Authorize(Policy = "AdminOnly")]
-		public async Task<ActionResult<RoomResponseDto>> UpdateRoom(Guid id, [FromBody] CreateOrupdateRoomDto dto)
+		[Consumes("multipart/form-data")]
+		public async Task<ActionResult<RoomResponseDto>> UpdateRoom(
+			Guid id,
+			[FromForm] CreateOrupdateRoomDto dto,
+			CancellationToken cancellationToken)
 		{
 			var room = await _context.Rooms
 				.Include(r => r.Amenities)
-				.FirstOrDefaultAsync(r => r.Id == id);
+				.Include(r => r.Images)
+				.FirstOrDefaultAsync(r => r.Id == id, cancellationToken);
 
 			if (room is null)
 			{
 				return NotFound(new { message = "Room not found." });
 			}
 
-			if (await _context.Rooms.AnyAsync(r => r.Id != id && r.RoomNumber == dto.RoomNumber))
+			if (await _context.Rooms.AnyAsync(r => r.Id != id && r.RoomNumber == dto.RoomNumber, cancellationToken))
 			{
 				return Conflict(new { message = "Room number already exists." });
 			}
@@ -521,7 +527,7 @@ namespace Hotel_Management_System_Backend_dotNet.Controllers
 			var amenityIds = dto.AmenityIds.Distinct().ToList();
 			var amenities = await _context.Amenities
 				.Where(a => amenityIds.Contains(a.Id))
-				.ToListAsync();
+				.ToListAsync(cancellationToken);
 
 			if (amenities.Count != amenityIds.Count)
 			{
@@ -530,71 +536,142 @@ namespace Hotel_Management_System_Backend_dotNet.Controllers
 				return BadRequest(new { message = "Some amenities were not found.", missingAmenityIds = missingIds });
 			}
 
-			room.RoomNumber = dto.RoomNumber;
-			room.Name = dto.Name.Trim();
-			room.Category = dto.Category.Trim();
-			room.Floor = dto.Floor;
-			room.Status = dto.Status.Trim();
-			room.IsAvailable = dto.IsAvailable;
-			room.Price = dto.Price;
-			room.Capacity = dto.Capacity;
-			room.BedCount = dto.BedCount;
-			room.BedType = dto.BedType.Trim();
-			room.Size = dto.Size;
-			room.Description = dto.Description.Trim();
-			room.UpdatedAt = DateTime.UtcNow;
+			var retainedImageIds = dto.ExistingImageIds.Distinct().ToHashSet();
+			var currentImageIds = room.Images.Select(image => image.Id).ToHashSet();
+			var invalidImageIds = retainedImageIds.Where(imageId => !currentImageIds.Contains(imageId)).ToList();
 
-			room.Amenities.Clear();
-			foreach (var amenity in amenities)
+			if (invalidImageIds.Count > 0)
 			{
-				room.Amenities.Add(amenity);
+				return BadRequest(new { message = "Some room images were not found.", missingImageIds = invalidImageIds });
 			}
 
-			await _context.SaveChangesAsync();
-
-			var response = await _context.Rooms
-				.AsNoTracking()
-				.Include(r => r.Images)
-				.Include(r => r.Amenities)
-				.Where(r => r.Id == room.Id)
-				.Select(r => new RoomResponseDto
+			foreach (var file in dto.Images)
+			{
+				if (file is null || file.Length == 0)
 				{
-					Id = r.Id,
-					RoomNumber = r.RoomNumber,
-					Name = r.Name,
-					Category = r.Category,
-					Floor = r.Floor,
-					Status = r.Status,
-					IsAvailable = r.IsAvailable,
-					Price = r.Price,
-					Capacity = r.Capacity,
-					BedCount = r.BedCount,
-					BedType = r.BedType,
-					Size = r.Size,
-					Description = r.Description,
-					CreatedAt = r.CreatedAt,
-					UpdatedAt = r.UpdatedAt,
-					AverageRating = r.AverageRating,
-					TotalReviews = r.TotalReviews,
-					Images = r.Images
-						.Select(image => new RoomImageDto
-						{
-							Id = image.Id,
-							ImageUrl = image.ImageUrl,
-							PublicId = image.PublicId
-						})
-						.ToList(),
-					Amenities = r.Amenities
-						.Select(amenity => new AmenityDto
-						{
-							Id = amenity.Id,
-							Name = amenity.Name
-						})
-						.ToList()
-				})
-				.FirstAsync();
+					return BadRequest(new { message = "Please select valid image files." });
+				}
 
-			return Ok(response);
+				if (file.Length > MaxRoomImageSize)
+				{
+					return BadRequest(new { message = "Each room image must be 10 MB or smaller." });
+				}
+
+				if (!AllowedImageTypes.Contains(file.ContentType.ToLowerInvariant()))
+				{
+					return BadRequest(new { message = "Only JPEG, PNG, and WebP images are allowed." });
+				}
+			}
+
+			var uploadedImages = new List<CloudinaryUploadResult>();
+
+			try
+			{
+				foreach (var file in dto.Images)
+				{
+					await using var stream = file.OpenReadStream();
+					var uploadResult = await _cloudinaryService.UploadRoomImageAsync(
+						stream,
+						file.FileName,
+						cancellationToken);
+
+					uploadedImages.Add(uploadResult);
+				}
+
+				var imagesToRemove = room.Images
+					.Where(image => !retainedImageIds.Contains(image.Id))
+					.ToList();
+
+				foreach (var image in imagesToRemove)
+				{
+					if (!string.IsNullOrWhiteSpace(image.PublicId))
+					{
+						await _cloudinaryService.DeleteImageAsync(image.PublicId, cancellationToken);
+					}
+
+					_context.RoomImages.Remove(image);
+				}
+
+				foreach (var uploadedImage in uploadedImages)
+				{
+					room.Images.Add(new RoomImage
+					{
+						ImageUrl = uploadedImage.SecureUrl,
+						PublicId = uploadedImage.PublicId
+					});
+				}
+
+				room.RoomNumber = dto.RoomNumber;
+				room.Name = dto.Name.Trim();
+				room.Category = dto.Category.Trim();
+				room.Floor = dto.Floor;
+				room.Status = dto.Status.Trim();
+				room.IsAvailable = dto.IsAvailable;
+				room.Price = dto.Price;
+				room.Capacity = dto.Capacity;
+				room.BedCount = dto.BedCount;
+				room.BedType = dto.BedType.Trim();
+				room.Size = dto.Size;
+				room.Description = dto.Description.Trim();
+				room.UpdatedAt = DateTime.UtcNow;
+
+				room.Amenities.Clear();
+				foreach (var amenity in amenities)
+				{
+					room.Amenities.Add(amenity);
+				}
+
+				await _context.SaveChangesAsync(cancellationToken);
+
+				var response = await _context.Rooms
+					.AsNoTracking()
+					.Include(r => r.Images)
+					.Include(r => r.Amenities)
+					.Where(r => r.Id == room.Id)
+					.Select(r => new RoomResponseDto
+					{
+						Id = r.Id,
+						RoomNumber = r.RoomNumber,
+						Name = r.Name,
+						Category = r.Category,
+						Floor = r.Floor,
+						Status = r.Status,
+						IsAvailable = r.IsAvailable,
+						Price = r.Price,
+						Capacity = r.Capacity,
+						BedCount = r.BedCount,
+						BedType = r.BedType,
+						Size = r.Size,
+						Description = r.Description,
+						CreatedAt = r.CreatedAt,
+						UpdatedAt = r.UpdatedAt,
+						AverageRating = r.AverageRating,
+						TotalReviews = r.TotalReviews,
+						Images = r.Images
+							.Select(image => new RoomImageDto
+							{
+								Id = image.Id,
+								ImageUrl = image.ImageUrl,
+								PublicId = image.PublicId
+							})
+							.ToList(),
+						Amenities = r.Amenities
+							.Select(amenity => new AmenityDto
+							{
+								Id = amenity.Id,
+								Name = amenity.Name
+							})
+							.ToList()
+					})
+					.FirstAsync(cancellationToken);
+
+				return Ok(response);
+			}
+			catch
+			{
+				await CleanupUploadedImagesAsync(uploadedImages, cancellationToken);
+				throw;
+			}
 		}
 
 		[HttpDelete("{id:guid}")]

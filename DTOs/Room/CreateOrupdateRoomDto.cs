@@ -46,6 +46,7 @@ namespace Hotel_Management_System_Backend_dotNet.DTOs.Room
         public string Description { get; set; } = string.Empty;
 
         public List<int> AmenityIds { get; set; } = [];
-        public  List<IFormFile> Images { get; set; } = [];
+        public List<int> ExistingImageIds { get; set; } = [];
+        public List<IFormFile> Images { get; set; } = [];
     }
 }
