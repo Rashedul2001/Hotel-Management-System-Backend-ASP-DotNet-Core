@@ -31,43 +31,45 @@ public sealed class CloudinaryService : ICloudinaryService
         _cloudinary = new Cloudinary(account);
     }
 
-    public async Task<CloudinaryUploadResult> UploadProfilePictureAsync(
+    public Task<CloudinaryUploadResult> UploadProfilePictureAsync(
         Stream fileStream,
         string fileName,
         CancellationToken cancellationToken = default)
     {
-        var uploadParams = new ImageUploadParams
-        {
-            File = new FileDescription(fileName, fileStream),
+        var transformation = new Transformation()
+            .Width(512)
+            .Height(512)
+            .Crop("fill")
+            .Gravity("face")
+            .Quality("auto")
+            .FetchFormat("auto");
 
-            Folder = "velora/users/profile-pictures",
-
-            UseFilename = false,
-
-            UniqueFilename = true,
-
-            Transformation = new Transformation()
-                .Width(512)
-                .Height(512)
-                .Crop("fill")
-                .Gravity("face")
-                .Quality("auto")
-                .FetchFormat("auto")
-        };
-
-        var result = await _cloudinary.UploadAsync(
-            uploadParams,
+        return UploadImageAsync(
+            fileStream,
+            fileName,
+            "velora/users/profile-pictures",
+            transformation,
             cancellationToken);
+    }
 
-        if (result.Error != null)
-        {
-            throw new InvalidOperationException(
-                $"Cloudinary upload failed: {result.Error.Message}");
-        }
+    public Task<CloudinaryUploadResult> UploadRoomImageAsync(
+        Stream fileStream,
+        string fileName,
+        CancellationToken cancellationToken = default)
+    {
+        var transformation = new Transformation()
+            .Width(1600)
+            .Height(1000)
+            .Crop("fill")
+            .Quality("auto")
+            .FetchFormat("auto");
 
-        return new CloudinaryUploadResult(
-            result.SecureUrl.ToString(),
-            result.PublicId);
+        return UploadImageAsync(
+            fileStream,
+            fileName,
+            "velora/rooms",
+            transformation,
+            cancellationToken);
     }
 
     public async Task DeleteImageAsync(
@@ -88,5 +90,34 @@ public sealed class CloudinaryService : ICloudinaryService
             throw new InvalidOperationException(
                 $"Cloudinary deletion failed: {result.Error.Message}");
         }
+    }
+
+    private async Task<CloudinaryUploadResult> UploadImageAsync(
+        Stream fileStream,
+        string fileName,
+        string folder,
+        Transformation transformation,
+        CancellationToken cancellationToken)
+    {
+        var uploadParams = new ImageUploadParams
+        {
+            File = new FileDescription(fileName, fileStream),
+            Folder = folder,
+            UseFilename = false,
+            UniqueFilename = true,
+            Transformation = transformation
+        };
+
+        var result = await _cloudinary.UploadAsync(uploadParams, cancellationToken);
+
+        if (result.Error != null)
+        {
+            throw new InvalidOperationException(
+                $"Cloudinary upload failed: {result.Error.Message}");
+        }
+
+        return new CloudinaryUploadResult(
+            result.SecureUrl.ToString(),
+            result.PublicId);
     }
 }

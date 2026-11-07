@@ -7,7 +7,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Hotel_Management_System_Backend_dotNet.Migrations
 {
     /// <inheritdoc />
-    public partial class InitialIdentity : Migration
+    public partial class AddNewMigrationToRemoveWarnings : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -31,9 +31,10 @@ namespace Hotel_Management_System_Backend_dotNet.Migrations
                 columns: table => new
                 {
                     Id = table.Column<string>(type: "text", nullable: false),
-                    FullName = table.Column<string>(type: "text", nullable: true),
-                    ProfilePictureUrl = table.Column<string>(type: "text", nullable: true),
-                    CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    FullName = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false),
+                    ProfilePictureUrl = table.Column<string>(type: "character varying(2048)", maxLength: 2048, nullable: true),
+                    ProfilePicturePublicId = table.Column<string>(type: "character varying(255)", maxLength: 255, nullable: true),
+                    CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
                     UserName = table.Column<string>(type: "character varying(256)", maxLength: 256, nullable: true),
                     NormalizedUserName = table.Column<string>(type: "character varying(256)", maxLength: 256, nullable: true),
                     Email = table.Column<string>(type: "character varying(256)", maxLength: 256, nullable: true),

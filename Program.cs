@@ -1,6 +1,7 @@
 using System.Security.Claims;
 using Hotel_Management_System_Backend_dotNet.Data;
 using Hotel_Management_System_Backend_dotNet.Data.Configuration;
+using Hotel_Management_System_Backend_dotNet.Data.MockData;
 using Hotel_Management_System_Backend_dotNet.Data.Seeds;
 using Hotel_Management_System_Backend_dotNet.Entities;
 using Hotel_Management_System_Backend_dotNet.Entities.Authorization;
@@ -9,8 +10,6 @@ using Hotel_Management_System_Backend_dotNet.Services.Interfaces;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Facebook;
 using Microsoft.AspNetCore.Authentication.Google;
-using Microsoft.AspNetCore.Authentication.OAuth;
-using Microsoft.AspNetCore.Authentication.OpenIdConnect;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -495,6 +494,7 @@ builder
 
 builder.Services.Configure<ApiBehaviorOptions>(options =>
 {
+
     options.InvalidModelStateResponseFactory = context =>
     {
         var env = builder.Environment;
@@ -503,6 +503,7 @@ builder.Services.Configure<ApiBehaviorOptions>(options =>
 
         if (env.IsDevelopment())
         {
+            
             errors = context
                 .ModelState.Where(e => e.Value != null && e.Value.Errors.Count > 0)
                 .Select(e => new
@@ -528,6 +529,20 @@ if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
 }
+//---------------------------------------------------------
+// Seeding the Database
+//---------------------------------------------------------
+if (app.Environment.IsDevelopment())
+{
+	using var scope = app.Services.CreateScope();
+	var services = scope.ServiceProvider;
+	var context = services.GetRequiredService<ApplicationDbContext>();
+	// Ensure the database is created
+	context.Database.EnsureCreated();
+	// Seed mock data
+	await MockDataSeeder.SeedRoomsAsync(context);
+}
+
 
 // ---------------------------------------------------------
 // ROLE SEEDING
